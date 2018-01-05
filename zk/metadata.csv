@@ -11,7 +11,7 @@ zookeeper.latency.avg,gauge,,millisecond,,The amount of time it takes for the se
 zookeeper.latency.max,gauge,,millisecond,,The amount of time it takes for the server to respond to a client request.,-1,zookeeper,max latency
 zookeeper.latency.min,gauge,,millisecond,,The amount of time it takes for the server to respond to a client request.,1,zookeeper,min latency
 zookeeper.nodes,gauge,,node,,The number of znodes in the ZooKeeper namespace (the data).,0,zookeeper,nodes
-zookeeper.outstanding_requests,gauge,,request,,The number of queued requests when the server is under load and is receiving more sustained requests than it can process.,-1,zookeeper,reqs
+zookeeper.outstanding_requests,gauge,,request,,The number of queued requests when the server is under load and is receiving more sustained requests than it can process.,-1 zookeeper,reqs
 zookeeper.timeouts,rate,,occurrence,,The rate of timeouts the Datadog Agent received when trying to collect stats.,-1,zookeeper,timeouts
-zookeeper.zxid.count,gauge,,,,,0,zookeeper,
-zookeeper.zxid.epoch,gauge,,,,,0,zookeeper,
+zookeeper.zxid.count,gauge,,,,"Low order 32-bits of zxid",0,zookeeper,
+zookeeper.zxid.epoch,gauge,,,,"High order 32-bits of zxid",0,zookeeper,

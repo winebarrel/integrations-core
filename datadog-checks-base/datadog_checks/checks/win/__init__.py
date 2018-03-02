@@ -5,9 +5,12 @@
 try:
     # Agent5 compatibility layer
     from checks.libs.win.pdhbasecheck import PDHBaseCheck
+    from checks.libs.win.winpdh import WinPDHCounter
 except ImportError:
-    from .winpdb_base import PDHBaseCheck
+    from .winpdh_base import PDHBaseCheck
+    from .winpdh import WinPDHCounter
 
 __all__ = [
     'PDHBaseCheck',
+    'WinPDHCounter',
 ]

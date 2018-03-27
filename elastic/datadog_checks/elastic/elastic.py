@@ -42,6 +42,7 @@ ESInstanceConfig = namedtuple(
 class ESCheck(AgentCheck):
     SERVICE_CHECK_CONNECT_NAME = 'elasticsearch.can_connect'
     SERVICE_CHECK_CLUSTER_STATUS = 'elasticsearch.cluster_health'
+    SERVICE_CHECK_INDEX_STATUS = 'elasticsearch.index_health'
 
     DEFAULT_TIMEOUT = 5
 
@@ -84,6 +85,16 @@ class ESCheck(AgentCheck):
         "elasticsearch.primaries.refresh.total.time": ("gauge", "_all.primaries.refresh.total_time_in_millis", lambda v: float(v)/1000),
         "elasticsearch.primaries.flush.total": ("gauge", "_all.primaries.flush.total"),
         "elasticsearch.primaries.flush.total.time": ("gauge", "_all.primaries.flush.total_time_in_millis", lambda v: float(v)/1000)
+    }
+
+    INDEX_STATS_METRICS = { # Metrics for index level 
+        "elasticsearch.index.health": ("guage", "index.health"),
+        "elasticsearch.index.docs.count": ("gauge", "index.docs.count"),
+        "elasticsearch.index.docs.deleted": ("gauge", "index.docs.deleted"),
+        "elasticsearch.index.primary_shards": ("gauge", "index.primary_shards"),
+        "elasticsearch.index.replica_shards": ("gauge", "index.replica_shards"),
+        "elasticsearch.index.primary_store_size": ("gauge", "index.primary_shard_size"),
+        "elasticsearch.index.store_size": ("gauge", "index.store_size")
     }
 
     STATS_METRICS = {  # Metrics that are common to all Elasticsearch versions
@@ -429,7 +440,6 @@ class ESCheck(AgentCheck):
         # Load stats data.
         # This must happen before other URL processing as the cluster name
         # is retreived here, and added to the tag list.
-
         stats_url = urlparse.urljoin(config.url, stats_url)
         stats_data = self._get_data(stats_url, config)
         if stats_data['cluster_name']:
@@ -465,6 +475,7 @@ class ESCheck(AgentCheck):
             pending_tasks_data = self._get_data(pending_tasks_url, config)
             self._process_pending_tasks_data(pending_tasks_data, config)
 
+        self._get_index_metrics(config)
         # If we're here we did not have any ES conn issues
         self.service_check(
             self.SERVICE_CHECK_CONNECT_NAME,
@@ -495,6 +506,29 @@ class ESCheck(AgentCheck):
         self.service_metadata('version', version)
         self.log.debug("Elasticsearch version is %s" % version)
         return version
+
+    def _get_index_metrics(self, config):
+        cat_url = '/_cat/indices?format=json&bytes=b'
+        index_url = urlparse.urljoin(config.url, cat_url)
+        index_resp = self._get_data(index_url, config)
+        index_stats_metrics = dict(self.INDEX_STATS_METRICS)
+        for idx in index_resp:
+            tags = config.tags + ['index_name:' + idx['index']]
+            index_data = {
+                'index.health':             idx['health'],
+                'index.docs.count':         idx['docs.count'],
+                'index.docs.deleted':       idx['docs.deleted'],
+                'index.primary_shards':     idx['pri'],
+                'index.replica_shards':     idx['rep'],
+                'index.primary_store_size': idx['pri.store.size'],
+                'index.store_size':         idx['store.size']
+            }
+
+            for metric in index_stats_metrics:
+                # metric description
+                desc = index_stats_metrics[metric]
+                self._process_metric(index_data, metric, *desc, tags=tags)
+
 
     def _define_params(self, version, cluster_stats):
         """ Define the set of URLs and METRICS to use depending on the
@@ -694,6 +728,8 @@ class ESCheck(AgentCheck):
         xfom: a lambda to apply to the numerical value
         """
         value = data
+
+        print "index_metric:", metric, tags
 
         # Traverse the nested dictionaries
         for key in path.split('.'):

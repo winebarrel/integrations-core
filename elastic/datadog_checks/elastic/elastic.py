@@ -25,6 +25,7 @@ ESInstanceConfig = namedtuple(
         'pshard_stats',
         'pshard_graceful_to',
         'cluster_stats',
+        'index_stats',
         'password',
         'service_check_tags',
         'health_tags',
@@ -88,13 +89,13 @@ class ESCheck(AgentCheck):
     }
 
     INDEX_STATS_METRICS = { # Metrics for index level 
-        "elasticsearch.index.health": ("guage", "index.health"),
-        "elasticsearch.index.docs.count": ("gauge", "index.docs.count"),
-        "elasticsearch.index.docs.deleted": ("gauge", "index.docs.deleted"),
-        "elasticsearch.index.primary_shards": ("gauge", "index.primary_shards"),
-        "elasticsearch.index.replica_shards": ("gauge", "index.replica_shards"),
-        "elasticsearch.index.primary_store_size": ("gauge", "index.primary_shard_size"),
-        "elasticsearch.index.store_size": ("gauge", "index.store_size")
+        "elasticsearch.index.health": ("guage", "health"),
+        "elasticsearch.index.docs.count": ("gauge", "docs_count"),
+        "elasticsearch.index.docs.deleted": ("gauge", "docs_deleted"),
+        "elasticsearch.index.primary_shards": ("gauge", "primary_shards"),
+        "elasticsearch.index.replica_shards": ("gauge", "replica_shards"),
+        "elasticsearch.index.primary_store_size": ("gauge", "primary_store_size"),
+        "elasticsearch.index.store_size": ("gauge", "store_size")
     }
 
     STATS_METRICS = {  # Metrics that are common to all Elasticsearch versions
@@ -376,7 +377,7 @@ class ESCheck(AgentCheck):
 
         pshard_stats = _is_affirmative(instance.get('pshard_stats', False))
         pshard_graceful_to = _is_affirmative(instance.get('pshard_graceful_timeout', False))
-
+        index_stats = _is_affirmative(instance.get('index_stats', False))
         cluster_stats = _is_affirmative(instance.get('cluster_stats', False))
         if 'is_external' in instance:
             cluster_stats = _is_affirmative(instance.get('is_external', False))
@@ -409,6 +410,7 @@ class ESCheck(AgentCheck):
             pshard_stats=pshard_stats,
             pshard_graceful_to=pshard_graceful_to,
             cluster_stats=cluster_stats,
+            index_stats=index_stats,
             password=instance.get('password'),
             service_check_tags=service_check_tags,
             health_tags=[],
@@ -475,7 +477,9 @@ class ESCheck(AgentCheck):
             pending_tasks_data = self._get_data(pending_tasks_url, config)
             self._process_pending_tasks_data(pending_tasks_data, config)
 
-        self._get_index_metrics(config)
+        if config.index_stats:
+            self._get_index_metrics(config)
+
         # If we're here we did not have any ES conn issues
         self.service_check(
             self.SERVICE_CHECK_CONNECT_NAME,
@@ -511,17 +515,17 @@ class ESCheck(AgentCheck):
         cat_url = '/_cat/indices?format=json&bytes=b'
         index_url = urlparse.urljoin(config.url, cat_url)
         index_resp = self._get_data(index_url, config)
-        index_stats_metrics = dict(self.INDEX_STATS_METRICS)
+        index_stats_metrics = self.INDEX_STATS_METRICS
         for idx in index_resp:
             tags = config.tags + ['index_name:' + idx['index']]
             index_data = {
-                'index.health':             idx['health'],
-                'index.docs.count':         idx['docs.count'],
-                'index.docs.deleted':       idx['docs.deleted'],
-                'index.primary_shards':     idx['pri'],
-                'index.replica_shards':     idx['rep'],
-                'index.primary_store_size': idx['pri.store.size'],
-                'index.store_size':         idx['store.size']
+                'health':             idx['health'],
+                'docs_count':         idx['docs.count'],
+                'docs_deleted':       idx['docs.deleted'],
+                'primary_shards':     idx['pri'],
+                'replica_shards':     idx['rep'],
+                'primary_store_size': idx['pri.store.size'],
+                'store_size':         idx['store.size'],
             }
 
             for metric in index_stats_metrics:
@@ -722,14 +726,13 @@ class ESCheck(AgentCheck):
 
     def _process_metric(self, data, metric, xtype, path, xform=None,
                         tags=None, hostname=None):
-        """data: dictionary containing all the stats
+        """
+        data: dictionary containing all the stats
         metric: datadog metric
         path: corresponding path in data, flattened, e.g. thread_pool.bulk.queue
-        xfom: a lambda to apply to the numerical value
+        xform: a lambda to apply to the numerical value
         """
         value = data
-
-        print "index_metric:", metric, tags
 
         # Traverse the nested dictionaries
         for key in path.split('.'):

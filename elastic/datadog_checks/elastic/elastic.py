@@ -88,16 +88,6 @@ class ESCheck(AgentCheck):
         "elasticsearch.primaries.flush.total.time": ("gauge", "_all.primaries.flush.total_time_in_millis", lambda v: float(v)/1000)
     }
 
-    INDEX_STATS_METRICS = { # Metrics for index level 
-        "elasticsearch.index.health": ("guage", "health"),
-        "elasticsearch.index.docs.count": ("gauge", "docs_count"),
-        "elasticsearch.index.docs.deleted": ("gauge", "docs_deleted"),
-        "elasticsearch.index.primary_shards": ("gauge", "primary_shards"),
-        "elasticsearch.index.replica_shards": ("gauge", "replica_shards"),
-        "elasticsearch.index.primary_store_size": ("gauge", "primary_store_size"),
-        "elasticsearch.index.store_size": ("gauge", "store_size")
-    }
-
     STATS_METRICS = {  # Metrics that are common to all Elasticsearch versions
         "elasticsearch.docs.count": ("gauge", "indices.docs.count"),
         "elasticsearch.docs.deleted": ("gauge", "indices.docs.deleted"),
@@ -207,6 +197,16 @@ class ESCheck(AgentCheck):
         "elasticsearch.fs.total.total_in_bytes": ("gauge", "fs.total.total_in_bytes"),
         "elasticsearch.fs.total.free_in_bytes": ("gauge", "fs.total.free_in_bytes"),
         "elasticsearch.fs.total.available_in_bytes": ("gauge", "fs.total.available_in_bytes"),
+    }
+
+    INDEX_STATS_METRICS = { # Metrics for index level
+        "elasticsearch.index.health": ("guage", "health"),
+        "elasticsearch.index.docs.count": ("gauge", "docs_count"),
+        "elasticsearch.index.docs.deleted": ("gauge", "docs_deleted"),
+        "elasticsearch.index.primary_shards": ("gauge", "primary_shards"),
+        "elasticsearch.index.replica_shards": ("gauge", "replica_shards"),
+        "elasticsearch.index.primary_store_size": ("gauge", "primary_store_size"),
+        "elasticsearch.index.store_size": ("gauge", "store_size")
     }
 
     JVM_METRICS_POST_0_90_10 = {

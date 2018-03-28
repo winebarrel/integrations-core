@@ -167,7 +167,7 @@ STATS_METRICS = {  # Metrics that are common to all Elasticsearch versions
     "elasticsearch.fs.total.available_in_bytes": ("gauge", "fs.total.available_in_bytes"),
 }
 
-INDEX_STATS_METRICS = { # Metrics for index level 
+INDEX_STATS_METRICS = { # Metrics for index level
     "elasticsearch.index.health": ("guage", "health"),
     "elasticsearch.index.docs.count": ("gauge", "docs_count"),
     "elasticsearch.index.docs.deleted": ("gauge", "docs_deleted"),

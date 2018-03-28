@@ -615,7 +615,7 @@ class TestElastic(AgentCheckTest):
         config = {'instances': [
             {'url': 'http://localhost:9200', 'index_stats': True}
         ]}
-        index_metrics = self.INDEX_STATS_METRICS
+        index_metrics = INDEX_STATS_METRICS
         self.run_check(config)
         for m_name, desc in index_metrics.iteritems():
             self.assertMetric(m_name, count=2)

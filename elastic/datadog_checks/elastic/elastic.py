@@ -477,7 +477,7 @@ class ESCheck(AgentCheck):
             pending_tasks_data = self._get_data(pending_tasks_url, config)
             self._process_pending_tasks_data(pending_tasks_data, config)
 
-        if config.index_stats:
+        if config.index_stats && version >= [5, 0, 0]::
             self._get_index_metrics(config)
 
         # If we're here we did not have any ES conn issues

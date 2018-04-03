@@ -341,6 +341,10 @@ SERVICE_CHECK_NAME = 'riak.can_connect'
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 
+HOST = os.getenv('DOCKER_HOSTNAME', 'localhost')
+PORT = 18098
+BASE_URL = "http://{0}:{1}".format(HOST,PORT)
+
 
 @pytest.fixture(scope="session")
 def spin_up_riak():
@@ -355,7 +359,7 @@ def spin_up_riak():
     for _ in xrange(0, 10):
         res = None
         try:
-            res = requests.get('http://localhost:18098/riak/bucket')
+            res = requests.get("{0}/riak/bucket".format(BASE_URL))
             log.info("response: {0}".format(res))
             log.info("status code: {0}, text: {1}".format(res.status_code, res.text))
             res.raise_for_status
@@ -365,22 +369,17 @@ def spin_up_riak():
             log.info("exception: {0}, response: {1}".format(e, res))
             time.sleep(5)
     if not can_access:
-        try:
-            subprocess.check_call([
-                "curl", "http://localhost:18098/riak/bucket","-vvvvvv"], env=env)
-        except Exception as e:
-            log.info(e)
         raise Exception("Cannot access Riak")
 
     data = 'herzlich willkommen'
     headers = {"Content-Type": "text/plain"}
     for _ in xrange(0, 10):
         res = requests.post(
-            'http://localhost:18098/riak/bucket/german',
+            "{0}/riak/bucket/german".format(BASE_URL),
             headers=headers,
             data=data)
         res.raise_for_status
-        res = requests.get('http://localhost:18098/riak/bucket/german')
+        res = requests.get("{0}/riak/bucket/german".format(BASE_URL))
         res.raise_for_status
 
     # some stats require a bit of time before the test will capture them
@@ -399,7 +398,7 @@ def aggregator():
 def test_check(aggregator, spin_up_riak):
     riak_check = Riak(CHECK_NAME, {}, {})
     config = {
-            "url": "http://localhost:18098/stats",
+            "url": "{0}/stats".format(BASE_URL),
             "tags": ["my_tag"]
     }
     riak_check.check(config)

@@ -343,7 +343,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 HOST = os.getenv('DOCKER_HOSTNAME', 'localhost')
 PORT = 18098
-BASE_URL = "http://{0}:{1}".format(HOST,PORT)
+BASE_URL = "http://{0}:{1}".format(HOST, PORT)
 
 
 @pytest.fixture(scope="session")

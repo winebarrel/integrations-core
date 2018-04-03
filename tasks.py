@@ -23,6 +23,7 @@ AGENT_BASED_INTEGRATIONS = [
     'nfsstat',
     'prometheus',
     'redisdb',
+    'riak',
     'vsphere',
 ]
 

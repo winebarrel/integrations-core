@@ -301,13 +301,13 @@ class TestOpenstack(AgentCheckTest):
 
             self.service_checks = self.check.get_service_checks()
 
-            tags = ['server:http://10.0.2.15:5000', 'optional:tag1']
+            tags = ['keystone_server:http://10.0.2.15:5000', 'optional:tag1']
             # Expect OK, since we've mocked an API response
-            self.assertServiceCheck(self.check.IDENTITY_API_SC, status=AgentCheck.OK, count=1)
+            self.assertServiceCheck(self.check.IDENTITY_API_SC, status=AgentCheck.OK, count=1, tags=tags)
 
             # Expect CRITICAL since URLs are non-existent
-            self.assertServiceCheck(self.check.COMPUTE_API_SC, status=AgentCheck.CRITICAL, count=1)
-            self.assertServiceCheck(self.check.NETWORK_API_SC, status=AgentCheck.CRITICAL, count=1)
+            self.assertServiceCheck(self.check.COMPUTE_API_SC, status=AgentCheck.CRITICAL, count=1, tags=tags)
+            self.assertServiceCheck(self.check.NETWORK_API_SC, status=AgentCheck.CRITICAL, count=1, tags=tags)
 
             self.check._current_scope = scope
 
